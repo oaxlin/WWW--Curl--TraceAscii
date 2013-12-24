@@ -98,6 +98,12 @@ sub import {
     }
 }
 
+=head2 new
+
+Create a new curl object.
+
+=cut
+
 sub new {
     my $class = shift;
     my $curl = WWW::Curl::Easy->newTraceAscii(@_);
