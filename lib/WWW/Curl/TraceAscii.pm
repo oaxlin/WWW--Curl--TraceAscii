@@ -8,7 +8,7 @@ use WWW::Curl::Easy;
 use Time::HiRes qw(gettimeofday);
 
 use vars qw($VERSION);
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 =head1 NAME
 
@@ -22,27 +22,28 @@ WWW::Curl::TraceAscii - Perl extension interface for libcurl
     # Overrides WWW::Curl::Easy->new
     use WWW::Curl::TraceAscii qw(:new);
 
-    # Simple Example
+    # GET Example
     use WWW::Curl::TraceAscii;
-    my $response;
     my $curl = WWW::Curl::TraceAscii->new;
-    $curl->setopt(CURLOPT_WRITEDATA,\$response);
+    $curl->setopt(CURLOPT_URL, 'http://example.com');
     $curl->perform;
+    my $response_PTR = $curl->trace_response;
 
-    # More Advanced Example
+    # POST Example
     use WWW::Curl::TraceAscii;
     my $response;
     my $post = "some post data";
     my $curl = WWW::Curl::TraceAscii->new;
     $curl->setopt(CURLOPT_POST, 1);
     $curl->setopt(CURLOPT_POSTFIELDS, $post);
-    $curl->setopt(CURLOPT_URL,'http://www.google.com/');
+    $curl->setopt(CURLOPT_URL,'http://example.com/');
     $curl->setopt(CURLOPT_WRITEDATA,\$response);
     $curl->perform;
 
-    # These two methods only exist in TraceAscii
-    my @headers = $curl->trace_headers;
-    my $trace_ascii = $curl->trace_ascii;
+    # These methods only exist in TraceAscii
+    my $response_PTR = $curl->trace_response;
+    my $headers_PTR = $curl->trace_headers;
+    my $trace_ascii_PTR = $curl->trace_ascii;
 
 =head1 DESCRIPTION
 
@@ -54,7 +55,7 @@ This module uses WWW::Curl::Easy at it's base.  WWW::Curl::TraceAscii gives you 
 
 =head2 WHY DO I NEED A TRACE?
 
-I've been curling pages for decades.  Usually in an automatic fashion.  And while you can write code that will handle almost all failures.  You can't answer the question that will inevitably be asked for a faulter you didn't expect... What happened??
+I've been curling pages for decades.  Usually in an automatic fashion.  And while you can write code that will handle almost all failures.  You can't answer the question that will inevitably be asked for a result you didn't expect... What happened??
 
 I've seen hundreds of different types of errors come through that without a good trace would have been impossible to get a difinitive answer as to what happened.
 
@@ -98,6 +99,14 @@ sub import {
     }
 }
 
+sub setopt {
+    my $self = shift;
+    if ($_[0] eq CURLOPT_WRITEDATA && ref $_[1] eq 'SCALAR') {
+        $self->{'response'} = $_[1];
+    }
+    $self->{'curl'}->setopt(@_);
+}
+
 =head2 new
 
 Create a new curl object.
@@ -107,14 +116,30 @@ Create a new curl object.
 sub new {
     my $class = shift;
     my $curl = WWW::Curl::Easy->newTraceAscii(@_);
+    my $response;
+    $curl->setopt(CURLOPT_WRITEDATA,\$response);
 
     my $hash = {
         curl => $curl,
+        response => \$response,
         headers => &trace_headers_init($curl),
         trace_ascii => &trace_ascii_init($curl),
     };
 
     return bless $hash, $class;
+}
+
+=head2 trace_response
+
+This can get rather lengthy.  So to save memory it returns a pointer to the response data.
+
+NOTE: You can still set CURLOPT_WRITEDATA yourself if you pefer.
+
+=cut
+
+sub trace_response {
+    my $self = shift;
+    $self->{'response'};
 }
 
 =head2 trace_ascii
@@ -135,7 +160,7 @@ sub trace_ascii {
 The actual method used to produce the trace_ascii output.
 
 In WWW::Curl::Easy you would initialize this like so:
-  &trace_ascii_init($curl);
+  my $trace_ascii = &trace_ascii_init($curl);
 
 =cut
 
@@ -157,7 +182,7 @@ Returns an array of headers from your curl call.
 
 sub trace_headers {
     my $self = shift;
-    @{$self->{'headers'}};
+    $self->{'headers'};
 }
 
 =head2 trace_headers_init
@@ -165,7 +190,7 @@ sub trace_headers {
 The actual method used to produce the trace_headers output.
 
 In WWW::Curl::Easy you would initialize this like so:
-  &trace_headers_init($curl);
+  $headers = &trace_headers_init($curl);
 
 =cut
 
