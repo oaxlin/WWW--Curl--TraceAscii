@@ -121,7 +121,7 @@ sub new {
     return bless $hash, $class;
 }
 
-=head2 new
+=head2 setopt
 
 Same as setopt in WWW::Curl::Easy
 
