@@ -99,14 +99,6 @@ sub import {
     }
 }
 
-sub setopt {
-    my $self = shift;
-    if ($_[0] eq CURLOPT_WRITEDATA && ref $_[1] eq 'SCALAR') {
-        $self->{'response'} = $_[1];
-    }
-    $self->{'curl'}->setopt(@_);
-}
-
 =head2 new
 
 Create a new curl object.
@@ -127,6 +119,20 @@ sub new {
     };
 
     return bless $hash, $class;
+}
+
+=head2 new
+
+Same as setopt in WWW::Curl::Easy
+
+=cut
+
+sub setopt {
+    my $self = shift;
+    if ($_[0] eq CURLOPT_WRITEDATA && ref $_[1] eq 'SCALAR') {
+        $self->{'response'} = $_[1];
+    }
+    $self->{'curl'}->setopt(@_);
 }
 
 =head2 trace_response
