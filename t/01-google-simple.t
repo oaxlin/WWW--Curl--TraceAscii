@@ -12,7 +12,7 @@ $curl->setopt(CURLOPT_WRITEDATA,\$response);
 $curl->perform;
 my $response2 = $curl->trace_response;
 
-like  ($response, qr/<\!DOCTYPE.*<html.*/is, 'Testing that an HTML page was returned');
+like  ($response, qr/<html.*/is, 'Testing that an HTML page was returned');
 is ($response, $$response2, 'Testing that trace_response pointer returned the same page');
 
 my $trace_ascii = eval { $curl->trace_ascii };
