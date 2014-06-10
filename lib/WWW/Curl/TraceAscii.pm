@@ -2,13 +2,14 @@ package WWW::Curl::TraceAscii;
 use strict;
 use warnings;
 
+require 5.8.8;
 use Carp;
 use bytes;
 use WWW::Curl::Easy;
 use Time::HiRes qw(gettimeofday);
 
 use vars qw($VERSION);
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 =head1 NAME
 
